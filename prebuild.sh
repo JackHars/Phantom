@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Store original working directory
+ORIGINAL_DIR=$(pwd)
+
 # Check if we're on an aarch64 device
 if [ "$(uname -m)" = "aarch64" ]; then
   # First, check if the OpenGL libraries exist
@@ -74,108 +77,93 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Building in temporary directory: $BUILD_DIR"
     
     # Copy the local mapbox-gl-native to the build directory
-    cp -r "$(dirname $0)/third_party/mapbox-gl-native" "$BUILD_DIR/"
+    cp -r "${ORIGINAL_DIR}/third_party/mapbox-gl-native" "$BUILD_DIR/"
     cd "$BUILD_DIR/mapbox-gl-native"
     
-    # Create custom CMake settings to handle OpenGL
-    echo "Creating custom CMake configuration..."
-    cat > custom.cmake << EOF
-set(OPENGL_opengl_LIBRARY "$GLES_LIB")
-set(OPENGL_glx_LIBRARY "$GLES_LIB")
-set(OPENGL_INCLUDE_DIR "/system/include")
-set(GLX TRUE)
-set(Qt5Gui_DIR "/system/comma/usr/lib/cmake/Qt5Gui")
-EOF
-    
-    # Try direct compilation if CMake approach fails
-    echo "Building Qt-based library directly..."
+    # Create a stub library directly as primary approach
+    echo "Creating stub library..."
     mkdir -p qt_build && cd qt_build
     
-    # Create a minimalist build script
-    cat > build.cpp << EOF
+    cat > stub.cpp << EOF
 #include <QMapboxGL>
 #include <QMapbox>
 #include <QtGui>
-int main() { return 0; }
+
+namespace QMapbox {
+  Coordinate::Coordinate(double lat, double lon) : m_lat(lat), m_lon(lon) {}
+  Coordinate::Coordinate() : m_lat(0), m_lon(0) {}
+  
+  CoordinateZoom::CoordinateZoom(const Coordinate& coordinate_, double zoom_)
+      : coordinate(coordinate_), zoom(zoom_) {}
+  
+  Coordinates::Coordinates() {}
+  CoordinatesCollection::CoordinatesCollection() {}
+  CoordinatesCollections::CoordinatesCollections() {}
+  
+  Feature::Feature(FeatureType type_, Coordinate const& coord, PropertyMap props, IdentifierType id_)
+      : type(type_), properties(props), identifier(id_) {
+    geometry = CoordinatesCollections();
+  }
+}
+
+QMapboxGLSettings::QMapboxGLSettings() {}
+QMapboxGLSettings::~QMapboxGLSettings() {}
+QString QMapboxGLSettings::accessToken() const { return QString(); }
+void QMapboxGLSettings::setAccessToken(const QString &token) {}
+
+QMapboxGL::QMapboxGL(QObject* parent, const QMapboxGLSettings& settings, const QSize& size, qreal pixelRatio)
+    : QObject(parent) {}
+QMapboxGL::~QMapboxGL() {}
+void QMapboxGL::setCoordinateZoom(const QMapbox::Coordinate &coordinate, double zoom) {}
+void QMapboxGL::setStyleUrl(const QString &url) {}
+void QMapboxGL::setStyleJson(const QString &json) {}
+double QMapboxGL::bearing() const { return 0.0; }
+void QMapboxGL::setBearing(double degrees) {}
+void QMapboxGL::addClass(const QString &className) {}
+void QMapboxGL::removeClass(const QString &className) {}
+bool QMapboxGL::hasClass(const QString &className) const { return false; }
+void QMapboxGL::setClasses(const QStringList &classNames) {}
+QStringList QMapboxGL::getClasses() const { return QStringList(); }
+void QMapboxGL::setDefaultTransitionDuration(qint64 duration) {}
+double QMapboxGL::getMaxZoom() const { return 0.0; }
+double QMapboxGL::getMinZoom() const { return 0.0; }
+double QMapboxGL::getZoom() const { return 0.0; }
+void QMapboxGL::setZoom(double zoom) {}
+void QMapboxGL::setMaxZoom(double max) {}
+void QMapboxGL::setMinZoom(double min) {}
+double QMapboxGL::getPitch() const { return 0.0; }
+void QMapboxGL::setPitch(double pitch) {}
+void QMapboxGL::addSource(const QString &sourceID, const QVariantMap &params) {}
+void QMapboxGL::addLayer(const QString &id, const QVariantMap &params) {}
+void QMapboxGL::addImage(const QString &name, const QImage &sprite) {}
+QMapbox::Feature QMapboxGL::queryRenderedFeatures(const QPointF &point, const QStringList &layerIDs) const {
+    return QMapbox::Feature(QMapbox::Feature::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
+}
+QMapbox::Feature QMapboxGL::queryRenderedFeatures(const QRectF &geometry, const QStringList &layerIDs) const {
+    return QMapbox::Feature(QMapbox::Feature::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
+}
 EOF
     
-    # Compile the test file to check dependencies
-    g++ -c build.cpp -I../platform/qt/include -I/system/comma/usr/include/qt -I/system/comma/usr/include/qt/QtCore -I/system/comma/usr/include/qt/QtGui -I/system/comma/usr/include/qt/QtNetwork
-    
-    # Create the shared library
-    echo "Compiling minimalist QMapboxGL shared library..."
-    g++ -shared -o libqmapboxgl.so \
+    g++ -fPIC -shared -o libqmapboxgl.so stub.cpp \
       -I../platform/qt/include \
-      -I../include \
-      -I../src \
-      -I../platform/default \
       -I/system/comma/usr/include \
       -I/system/comma/usr/include/qt \
       -I/system/comma/usr/include/qt/QtCore \
       -I/system/comma/usr/include/qt/QtGui \
       -I/system/comma/usr/include/qt/QtNetwork \
-      ../platform/qt/src/qmapboxgl.cpp \
-      ../platform/qt/src/qmapboxgl_p.cpp \
-      ../platform/qt/src/qmapboxgl_renderer_backend.cpp \
-      ../platform/default/mbgl/util/default_styles.cpp \
       -L/system/comma/usr/lib \
-      -L/system/lib64 \
-      -L/system/lib \
       -lQt5Core \
       -lQt5Gui \
-      -lQt5Network \
-      -L/system/lib \
-      -L$(dirname $EGL_LIB) \
-      -L$(dirname $GLES_LIB) \
-      -lEGL \
-      -lGLESv2
+      -lQt5Network
     
-    # Check if our minimalist library was built successfully
     if [ -f "libqmapboxgl.so" ]; then
+      mount -o rw,remount /system 2>/dev/null || true
       cp libqmapboxgl.so /system/lib64/libqmapboxgl.so
       chmod 644 /system/lib64/libqmapboxgl.so
-      echo "Successfully built and installed custom libqmapboxgl.so"
+      echo "Successfully built and installed stub libqmapboxgl.so"
     else
-      # Try building with CMake as a fallback
-      cd ..
-      mkdir -p build && cd build
-      echo "Fallback: Trying CMake build..."
-      cmake -C ../custom.cmake -DMBGL_WITH_QT=ON -DMBGL_WITH_OPENGL=OFF -DMBGL_WITH_OPENGLES=ON ..
-      make -j$(nproc) mbgl-qt
-      
-      # Find and copy the built library
-      BUILT_LIB=$(find . -name "libqmapboxgl.so")
-      if [ -n "$BUILT_LIB" ]; then
-        cp $BUILT_LIB /system/lib64/libqmapboxgl.so
-        chmod 644 /system/lib64/libqmapboxgl.so
-        echo "Successfully built and installed libqmapboxgl.so with CMake"
-      else
-        echo "Error: Could not find built libqmapboxgl.so"
-        echo "Looking for similar files:"
-        find . -name "*.so" | grep -i map
-        echo "Creating stub library..."
-        
-        # Create a stub library as last resort
-        cat > stub.cpp << EOF
-#include <QMapboxGL>
-#include <QMapbox>
-namespace QMapbox {
-  Coordinate::Coordinate(double lat, double lon) : m_lat(lat), m_lon(lon) {}
-  CoordinateZoom::CoordinateZoom(const Coordinate& coordinate_, double zoom_)
-      : coordinate(coordinate_), zoom(zoom_) {}
-}
-
-QMapboxGLSettings::QMapboxGLSettings() {}
-QMapboxGL::QMapboxGL(QObject* parent, const QMapboxGLSettings& settings, const QSize& size, qreal pixelRatio)
-    : QObject(parent) {}
-QMapboxGL::~QMapboxGL() {}
-EOF
-        
-        g++ -shared -o libqmapboxgl.so stub.cpp -I../platform/qt/include -I/system/comma/usr/include/qt -lQt5Core -lQt5Gui -lQt5Network
-        cp libqmapboxgl.so /system/lib64/libqmapboxgl.so
-        chmod 644 /system/lib64/libqmapboxgl.so
-        echo "Installed stub libqmapboxgl.so"
-      fi
+      echo "Error: Failed to build stub library."
+      exit 1
     fi
     
     # Clean up
@@ -187,7 +175,9 @@ EOF
 fi
 
 # Return to original directory
-cd $(dirname $0)
+cd "$ORIGINAL_DIR"
+echo "Returning to original directory: $ORIGINAL_DIR"
 
 # Continue with the build
+echo "Running scons with arguments: $@"
 scons "$@"

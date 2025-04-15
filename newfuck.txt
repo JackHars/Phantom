@@ -1,0 +1,71 @@
+clang -o selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.os -c -std=gnu11 -DSWAGLOG -DACADOS_WITH_QPOASES -g -fPIC -O2 -Wunused -Werror -Wno-unknown-warning-option -Wno-deprecated-register -Wno-register -Wno-inconsistent-missing-override -Wno-c99-designator -Wno-reorder-init-list -DSWAGLOG -Wno-unused -fPIC -I. -Iphonelibs/acados/include -Iphonelibs/acados/include/blasfeo/include -Iphonelibs/acados/include/hpipm/include -Iphonelibs/catch2/include -Iphonelibs/bzip2 -Iphonelibs/libyuv/include -Iphonelibs/openmax/include -Iphonelibs/json11 -Iphonelibs/curl/include -Iphonelibs/libgralloc/include -Iphonelibs/android_frameworks_native/include -Iphonelibs/android_hardware_libhardware/include -Iphonelibs/android_system_core/include -Iphonelibs/linux/include -Iphonelibs/snpe/include -Iphonelibs/mapbox-gl-native-qt/include -Iphonelibs/nanovg -Iphonelibs/qrcode -Iphonelibs -Icereal -Iopendbc/can -Iphonelibs/json11 selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.c
+In file included from selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.c:38:
+phonelibs/acados/include/acados/utils/print.h:1:1: error: unknown type name 'version'
+version https://git-lfs.github.com/spec/v1
+^
+phonelibs/acados/include/acados/utils/print.h:1:14: error: expected ';' after top level declarator
+version https://git-lfs.github.com/spec/v1
+             ^
+             ;
+phonelibs/acados/include/acados/utils/print.h:2:1: error: unknown type name 'oid'; did you mean 'void'?
+oid sha256:bbf20bc0512e21ab0703efc5141bce8cf8983852dced4221ebb11f8c751ce527
+^~~
+void
+phonelibs/acados/include/acados/utils/print.h:2:5: error: variable has incomplete type 'void'
+oid sha256:bbf20bc0512e21ab0703efc5141bce8cf8983852dced4221ebb11f8c751ce527
+    ^
+phonelibs/acados/include/acados/utils/print.h:2:11: error: expected ';' after top level declarator
+oid sha256:bbf20bc0512e21ab0703efc5141bce8cf8983852dced4221ebb11f8c751ce527
+          ^
+          ;
+phonelibs/acados/include/acados/utils/print.h:2:12: error: unknown type name 'bbf20bc0512e21ab0703efc5141bce8cf8983852dced4221ebb11f8c751ce527'
+oid sha256:bbf20bc0512e21ab0703efc5141bce8cf8983852dced4221ebb11f8c751ce527
+           ^
+phonelibs/acados/include/acados/utils/print.h:3:5: error: expected ';' after top level declarator
+size 3887
+    ^
+    ;
+In file included from selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.c:43:
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:53:29: error: unknown type name 'real_t'
+int lat_expl_vde_forw(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                            ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:53:43: error: unknown type name 'real_t'
+int lat_expl_vde_forw(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                          ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:53:66: error: unknown type name 'real_t'
+int lat_expl_vde_forw(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                                                 ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:61:28: error: unknown type name 'real_t'
+int lat_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                           ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:61:42: error: unknown type name 'real_t'
+int lat_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                         ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_model/lat_model.h:61:65: error: unknown type name 'real_t'
+int lat_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                                                ^
+In file included from selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.c:48:
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:43:26: error: unknown type name 'real_t'
+int lat_cost_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                         ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:43:40: error: unknown type name 'real_t'
+int lat_cost_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                       ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:43:63: error: unknown type name 'real_t'
+int lat_cost_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                                              ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:50:36: error: unknown type name 'real_t'
+int lat_cost_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                   ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:50:50: error: unknown type name 'real_t'
+int lat_cost_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                                 ^
+selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/lat_cost/lat_cost_y_fun.h:50:73: error: unknown type name 'real_t'
+int lat_cost_y_fun_jac_ut_xt(const real_t** arg, real_t** res, int* iw, real_t* w, void *mem);
+                                                                        ^
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+20 errors generated.
+scons: *** [selfdrive/controls/lib/lateral_mpc_lib/c_generated_code/acados_solver_lat.os] Error 1
+scons: building terminated because of errors.
+:wq
+

@@ -1,20 +1,40 @@
 #!/bin/bash
+
 # Check if we're on an aarch64 device
 if [ "$(uname -m)" = "aarch64" ]; then
   # Check if libqmapboxgl.so exists in /system/lib64
   if [ ! -f "/system/lib64/libqmapboxgl.so" ]; then
-    echo "Copying libqmapboxgl.so to /system/lib64/"
+    echo "Building and installing libqmapboxgl.so..."
     
     # Mount system as writable if needed
     mount -o rw,remount /system 2>/dev/null || true
     
-    # Copy the library
-    cp phonelibs/mapbox-gl-native-qt/aarch64/libqmapboxgl.so /system/lib64/
+    # Set up build environment
+    BUILD_DIR=$(mktemp -d)
+    echo "Building in temporary directory: $BUILD_DIR"
+    cd $BUILD_DIR
     
-    # Set proper permissions
-    chmod 644 /system/lib64/libqmapboxgl.so
+    # Clone and build mapbox-gl-native
+    git clone --recursive https://github.com/commaai/mapbox-gl-native.git
+    cd mapbox-gl-native
+    mkdir build && cd build
+    cmake ..
+    make -j$(nproc) mbgl-qt
     
-    echo "Library copied successfully"
+    # Find and copy the built library
+    BUILT_LIB=$(find . -name "libqmapboxgl.so")
+    if [ -n "$BUILT_LIB" ]; then
+      cp $BUILT_LIB /system/lib64/libqmapboxgl.so
+      chmod 644 /system/lib64/libqmapboxgl.so
+      echo "Successfully built and installed libqmapboxgl.so"
+    else
+      echo "Error: Could not find built libqmapboxgl.so"
+      exit 1
+    fi
+    
+    # Clean up
+    cd /tmp
+    rm -rf $BUILD_DIR
   else
     echo "libqmapboxgl.so already exists in /system/lib64/"
   fi
@@ -42,6 +62,9 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Warning: Qt5Gui configuration file not found at $QT_CONFIG_FILE"
   fi
 fi
+
+# Return to original directory
+cd $(dirname $0)
 
 # Continue with the build
 scons "$@"

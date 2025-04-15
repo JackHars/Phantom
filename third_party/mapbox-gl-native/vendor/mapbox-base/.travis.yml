@@ -1,0 +1,64 @@
+sudo: false
+# dist: bionic
+language: cpp
+
+# branches:
+#   only:
+#     - master
+
+env:
+  global:
+    - JOBS=4
+    - PROJECT_NAME="mapbox-base"
+
+jobs:
+  - &syntax-check
+    stage: test
+    os: linux
+    language: cpp
+    name: Syntax Check
+
+    addons: &gcc6
+      apt:
+        sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+        packages: [ 'clang-3.8', 'clang-tidy' ]
+
+    script: scripts/ci/run-syntax-check.sh
+
+  - &license-check
+    state: test
+    os: linux
+    language: node_js
+    node_js:
+      - 10
+    name: License Check
+    script: scripts/check-license.sh
+
+  - &test
+    stage: test
+    os: linux
+    language: cpp
+    name: Test / gcc-6-release
+    cache:
+      ccache: true
+      apt: true
+      directories:
+        - test/cache
+    addons: &gcc6
+      apt:
+        sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+        packages: ['g++-6']
+    compiler: "gcc-6"
+    env: "CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Release'"
+    install: scripts/ci/install-tests.sh
+    script: scripts/ci/run-tests.sh
+
+  - <<: *test
+    name: Test / gcc-6-debug
+    addons:
+      apt:
+        sources: [ 'ubuntu-toolchain-r-test', 'llvm-toolchain-precise-3.8' ]
+        packages: ['g++-6']
+    env: "CCOMPILER='gcc-6' CXXCOMPILER='g++-6' BUILD_TYPE='Debug'"
+    install: scripts/ci/install-tests.sh
+    script: scripts/ci/run-tests.sh

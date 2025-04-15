@@ -1,0 +1,3 @@
+# Ignore build artifacts and git files from third_party repos
+third_party/mapbox-gl-native/.git
+third_party/mapbox-gl-native/build/

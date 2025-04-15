@@ -12,12 +12,13 @@ if [ "$(uname -m)" = "aarch64" ]; then
     # Set up build environment
     BUILD_DIR=$(mktemp -d)
     echo "Building in temporary directory: $BUILD_DIR"
-    cd $BUILD_DIR
     
-    # Clone and build mapbox-gl-native
-    git clone --recursive https://github.com/commaai/mapbox-gl-native.git
-    cd mapbox-gl-native
-    mkdir build && cd build
+    # Copy the local mapbox-gl-native to the build directory
+    cp -r "$(dirname $0)/third_party/mapbox-gl-native" "$BUILD_DIR/"
+    cd "$BUILD_DIR/mapbox-gl-native"
+    
+    # Build mapbox
+    mkdir -p build && cd build
     cmake ..
     make -j$(nproc) mbgl-qt
     

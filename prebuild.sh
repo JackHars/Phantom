@@ -1,5 +1,17 @@
 #!/bin/bash
 
+# Parse command line options
+FORCE_REBUILD_MAPBOX=0
+SCONS_ARGS=()
+
+for arg in "$@"; do
+  if [ "$arg" == "--force-rebuild-mapbox" ]; then
+    FORCE_REBUILD_MAPBOX=1
+  else
+    SCONS_ARGS+=("$arg")
+  fi
+done
+
 # Store original working directory
 ORIGINAL_DIR=$(pwd)
 
@@ -65,77 +77,183 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Warning: Qt5Gui configuration file not found at $QT_CONFIG_FILE"
   fi
   
-  # Check for existing mapbox libraries in different locations
-  MAPBOX_LIB=$(find /system -name "libqmapboxgl.so" 2>/dev/null | head -1)
+  # Check if we need to build the mapbox library
+  NEED_REBUILD=0
   
-  # Create or symlink libqmapboxgl.so
-  if [ -n "$MAPBOX_LIB" ] && [ "$MAPBOX_LIB" != "/system/lib64/libqmapboxgl.so" ]; then
-    echo "Found existing mapbox library at $MAPBOX_LIB"
+  # Check if the library exists in the phonelibs directory
+  if [ ! -f "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/libqmapboxgl.so" ]; then
+    echo "Library not found in phonelibs/mapbox-gl-native-qt/aarch64/lib, will build it"
+    NEED_REBUILD=1
+  fi
+  
+  # Force rebuild if flag is set
+  if [ $FORCE_REBUILD_MAPBOX -eq 1 ]; then
+    echo "Forcing rebuild of mapbox library due to --force-rebuild-mapbox flag"
+    NEED_REBUILD=1
+  fi
+  
+  if [ $NEED_REBUILD -eq 1 ]; then
+    # Force rebuild of the stub library
+    echo "Building mapbox library..."
     mount -o rw,remount /system 2>/dev/null || true
-    ln -sf "$MAPBOX_LIB" /system/lib64/libqmapboxgl.so
-    echo "Created symlink from $MAPBOX_LIB to /system/lib64/libqmapboxgl.so"
-  elif [ ! -f "/system/lib64/libqmapboxgl.so" ]; then
-    echo "Building and installing libqmapboxgl.so..."
     
-    # Mount system as writable if needed
-    mount -o rw,remount /system 2>/dev/null || true
+    # Remove existing library if it exists
+    if [ -f "/system/lib64/libqmapboxgl.so" ]; then
+      echo "Removing existing library at /system/lib64/libqmapboxgl.so"
+      rm -f /system/lib64/libqmapboxgl.so
+    fi
     
     # Set up build environment
     BUILD_DIR=$(mktemp -d)
     echo "Building in temporary directory: $BUILD_DIR"
     
-    # Copy the local mapbox-gl-native to the build directory
-    cp -r "${ORIGINAL_DIR}/third_party/mapbox-gl-native" "$BUILD_DIR/" 2>/dev/null || echo "No local mapbox-gl-native directory found"
-    
-    # Create a more comprehensive stub library
+    # Create a comprehensive stub library with correct template specializations
     echo "Creating comprehensive stub library..."
     mkdir -p "$BUILD_DIR/mapbox-stub" && cd "$BUILD_DIR/mapbox-stub"
     
     cat > stub.cpp << EOF
-#include <QMapboxGL>
-#include <QMapbox>
+#include <QtCore>
 #include <QtGui>
 #include <memory>
 #include <string>
 #include <vector>
 #include <map>
 
+// Forward declarations for QMapbox classes needed by our implementation
+namespace QMapbox {
+  class Coordinate {
+  public:
+    double m_lat;
+    double m_lon;
+    Coordinate(double lat, double lon);
+    Coordinate();
+  };
+  
+  class CoordinateZoom {
+  public:
+    Coordinate coordinate;
+    double zoom;
+    CoordinateZoom(const Coordinate& coordinate_, double zoom_);
+  };
+  
+  class Coordinates {
+  public:
+    Coordinates();
+  };
+  
+  class CoordinatesCollection {
+  public:
+    CoordinatesCollection();
+  };
+  
+  class CoordinatesCollections {
+  public:
+    CoordinatesCollections();
+  };
+  
+  typedef std::map<QString, QVariant> PropertyMap;
+  typedef QVariant IdentifierType;
+  
+  enum FeatureType {
+    PointType,
+    LineStringType,
+    PolygonType
+  };
+  
+  class Feature {
+  public:
+    FeatureType type;
+    PropertyMap properties;
+    IdentifierType identifier;
+    CoordinatesCollections geometry;
+    Feature(FeatureType type_, Coordinate const& coord, PropertyMap props = PropertyMap(), IdentifierType id_ = IdentifierType());
+  };
+}
+
+class QMapboxGLSettings {
+public:
+    QMapboxGLSettings();
+    ~QMapboxGLSettings();
+    QString accessToken() const;
+    void setAccessToken(const QString &token);
+};
+
+class QMapboxGL : public QObject {
+public:
+    QMapboxGL(QObject* parent = nullptr, const QMapboxGLSettings& settings = QMapboxGLSettings(), const QSize& size = QSize(), qreal pixelRatio = 1);
+    ~QMapboxGL();
+    void setCoordinateZoom(const QMapbox::Coordinate &coordinate, double zoom);
+    void setStyleUrl(const QString &url);
+    void setStyleJson(const QString &json);
+    double bearing() const;
+    void setBearing(double degrees);
+    void addClass(const QString &className);
+    void removeClass(const QString &className);
+    bool hasClass(const QString &className) const;
+    void setClasses(const QStringList &classNames);
+    QStringList getClasses() const;
+    void setDefaultTransitionDuration(qint64 duration);
+    double getMaxZoom() const;
+    double getMinZoom() const;
+    double getZoom() const;
+    void setZoom(double zoom);
+    void setMaxZoom(double max);
+    void setMinZoom(double min);
+    double getPitch() const;
+    void setPitch(double pitch);
+    void addSource(const QString &sourceID, const QVariantMap &params);
+    void addLayer(const QString &id, const QVariantMap &params);
+    void addImage(const QString &name, const QImage &sprite);
+    QMapbox::Feature queryRenderedFeatures(const QPointF &point, const QStringList &layerIDs = QStringList()) const;
+    QMapbox::Feature queryRenderedFeatures(const QRectF &geometry, const QStringList &layerIDs = QStringList()) const;
+};
+
 // Forward declarations for mbgl classes
 namespace mbgl {
-    class Size;
-    struct ProgramParameters;
-    class DebugProgram;
-    class SymbolSDFIconProgram;
-    class HeatmapProgram;
-    class FillExtrusionPatternProgram;
-    class SymbolSDFTextProgram;
-    class LineSDFProgram;
-    class LinePatternProgram;
-    class HeatmapTextureProgram;
-    class HillshadeProgram;
-    class ClippingMaskProgram;
-    class RasterProgram;
-    class HillshadePrepareProgram;
-    class SymbolIconProgram;
-    class FillProgram;
-    class CollisionCircleProgram;
-    class SymbolTextAndIconProgram;
-    class CollisionBoxProgram;
-    class FillPatternProgram;
-    class LineGradientProgram;
-    class FillExtrusionProgram;
-    class BackgroundProgram;
-    class FillOutlinePatternProgram;
-    class CircleProgram;
-    class FillOutlineProgram;
-    class BackgroundPatternProgram;
-    class LineProgram;
+    class Size {
+    public:
+        Size() {}
+        Size(int, int) {}
+    };
+    
+    struct ProgramParameters {
+        ProgramParameters() {}
+    };
+    
+    // Forward declare all the program types
+    class DebugProgram {};
+    class SymbolSDFIconProgram {};
+    class HeatmapProgram {};
+    class FillExtrusionPatternProgram {};
+    class SymbolSDFTextProgram {};
+    class LineSDFProgram {};
+    class LinePatternProgram {};
+    class HeatmapTextureProgram {};
+    class HillshadeProgram {};
+    class ClippingMaskProgram {};
+    class RasterProgram {};
+    class HillshadePrepareProgram {};
+    class SymbolIconProgram {};
+    class FillProgram {};
+    class CollisionCircleProgram {};
+    class SymbolTextAndIconProgram {};
+    class CollisionBoxProgram {};
+    class FillPatternProgram {};
+    class LineGradientProgram {};
+    class FillExtrusionProgram {};
+    class BackgroundProgram {};
+    class FillOutlinePatternProgram {};
+    class CircleProgram {};
+    class FillOutlineProgram {};
+    class BackgroundPatternProgram {};
+    class LineProgram {};
     
     namespace style {
-        class CustomLayerHost;
+        class CustomLayerHost {};
+        
         class CustomLayer {
         public:
-            CustomLayer(const std::string& id, std::unique_ptr<CustomLayerHost>) {}
+            CustomLayer(const std::string& id, std::unique_ptr<CustomLayerHost> host) {}
         };
     }
     
@@ -162,152 +280,145 @@ namespace mbgl {
             Program() {}
             virtual ~Program() {}
         };
-        
-        class Backend {
-        public:
-            template <typename... Args>
-            static std::unique_ptr<Program<DebugProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<DebugProgram>>(new Program<DebugProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<SymbolSDFIconProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<SymbolSDFIconProgram>>(new Program<SymbolSDFIconProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<HeatmapProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<HeatmapProgram>>(new Program<HeatmapProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillExtrusionPatternProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillExtrusionPatternProgram>>(new Program<FillExtrusionPatternProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<SymbolSDFTextProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<SymbolSDFTextProgram>>(new Program<SymbolSDFTextProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<LineSDFProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<LineSDFProgram>>(new Program<LineSDFProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<LinePatternProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<LinePatternProgram>>(new Program<LinePatternProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<HeatmapTextureProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<HeatmapTextureProgram>>(new Program<HeatmapTextureProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<HillshadeProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<HillshadeProgram>>(new Program<HillshadeProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<ClippingMaskProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<ClippingMaskProgram>>(new Program<ClippingMaskProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<RasterProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<RasterProgram>>(new Program<RasterProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<HillshadePrepareProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<HillshadePrepareProgram>>(new Program<HillshadePrepareProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<SymbolIconProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<SymbolIconProgram>>(new Program<SymbolIconProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillProgram>>(new Program<FillProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<CollisionCircleProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<CollisionCircleProgram>>(new Program<CollisionCircleProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<SymbolTextAndIconProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<SymbolTextAndIconProgram>>(new Program<SymbolTextAndIconProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<CollisionBoxProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<CollisionBoxProgram>>(new Program<CollisionBoxProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillPatternProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillPatternProgram>>(new Program<FillPatternProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<LineGradientProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<LineGradientProgram>>(new Program<LineGradientProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillExtrusionProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillExtrusionProgram>>(new Program<FillExtrusionProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<BackgroundProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<BackgroundProgram>>(new Program<BackgroundProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillOutlinePatternProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillOutlinePatternProgram>>(new Program<FillOutlinePatternProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<CircleProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<CircleProgram>>(new Program<CircleProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<FillOutlineProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<FillOutlineProgram>>(new Program<FillOutlineProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<BackgroundPatternProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<BackgroundPatternProgram>>(new Program<BackgroundPatternProgram>()); 
-            }
-            
-            template <typename... Args>
-            static std::unique_ptr<Program<LineProgram>> Create(const ProgramParameters&) { 
-                return std::unique_ptr<Program<LineProgram>>(new Program<LineProgram>()); 
-            }
-        };
     }
-    
-    struct Size {
-        Size() {}
-        Size(int, int) {}
-    };
-    
-    struct ProgramParameters {
-        ProgramParameters() {}
-    };
 }
 
-// Define QMapbox namespace classes and functions
+// Explicit template specializations to match what the linker expects
+namespace mbgl {
+    namespace gfx {
+        template <>
+        std::unique_ptr<Program<DebugProgram>> Backend::Create<(Backend::Type)0, Program<DebugProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<DebugProgram>>(new Program<DebugProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<SymbolSDFIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolSDFIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<SymbolSDFIconProgram>>(new Program<SymbolSDFIconProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<HeatmapProgram>> Backend::Create<(Backend::Type)0, Program<HeatmapProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<HeatmapProgram>>(new Program<HeatmapProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillExtrusionPatternProgram>> Backend::Create<(Backend::Type)0, Program<FillExtrusionPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillExtrusionPatternProgram>>(new Program<FillExtrusionPatternProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<SymbolSDFTextProgram>> Backend::Create<(Backend::Type)0, Program<SymbolSDFTextProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<SymbolSDFTextProgram>>(new Program<SymbolSDFTextProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<LineSDFProgram>> Backend::Create<(Backend::Type)0, Program<LineSDFProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<LineSDFProgram>>(new Program<LineSDFProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<LinePatternProgram>> Backend::Create<(Backend::Type)0, Program<LinePatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<LinePatternProgram>>(new Program<LinePatternProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<HeatmapTextureProgram>> Backend::Create<(Backend::Type)0, Program<HeatmapTextureProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<HeatmapTextureProgram>>(new Program<HeatmapTextureProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<HillshadeProgram>> Backend::Create<(Backend::Type)0, Program<HillshadeProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<HillshadeProgram>>(new Program<HillshadeProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<ClippingMaskProgram>> Backend::Create<(Backend::Type)0, Program<ClippingMaskProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<ClippingMaskProgram>>(new Program<ClippingMaskProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<RasterProgram>> Backend::Create<(Backend::Type)0, Program<RasterProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<RasterProgram>>(new Program<RasterProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<HillshadePrepareProgram>> Backend::Create<(Backend::Type)0, Program<HillshadePrepareProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<HillshadePrepareProgram>>(new Program<HillshadePrepareProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<SymbolIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<SymbolIconProgram>>(new Program<SymbolIconProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillProgram>> Backend::Create<(Backend::Type)0, Program<FillProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillProgram>>(new Program<FillProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<CollisionCircleProgram>> Backend::Create<(Backend::Type)0, Program<CollisionCircleProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<CollisionCircleProgram>>(new Program<CollisionCircleProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<SymbolTextAndIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolTextAndIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<SymbolTextAndIconProgram>>(new Program<SymbolTextAndIconProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<CollisionBoxProgram>> Backend::Create<(Backend::Type)0, Program<CollisionBoxProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<CollisionBoxProgram>>(new Program<CollisionBoxProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillPatternProgram>> Backend::Create<(Backend::Type)0, Program<FillPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillPatternProgram>>(new Program<FillPatternProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<LineGradientProgram>> Backend::Create<(Backend::Type)0, Program<LineGradientProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<LineGradientProgram>>(new Program<LineGradientProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillExtrusionProgram>> Backend::Create<(Backend::Type)0, Program<FillExtrusionProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillExtrusionProgram>>(new Program<FillExtrusionProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<BackgroundProgram>> Backend::Create<(Backend::Type)0, Program<BackgroundProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<BackgroundProgram>>(new Program<BackgroundProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillOutlinePatternProgram>> Backend::Create<(Backend::Type)0, Program<FillOutlinePatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillOutlinePatternProgram>>(new Program<FillOutlinePatternProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<CircleProgram>> Backend::Create<(Backend::Type)0, Program<CircleProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<CircleProgram>>(new Program<CircleProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<FillOutlineProgram>> Backend::Create<(Backend::Type)0, Program<FillOutlineProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<FillOutlineProgram>>(new Program<FillOutlineProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<BackgroundPatternProgram>> Backend::Create<(Backend::Type)0, Program<BackgroundPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<BackgroundPatternProgram>>(new Program<BackgroundPatternProgram>());
+        }
+        
+        template <>
+        std::unique_ptr<Program<LineProgram>> Backend::Create<(Backend::Type)0, Program<LineProgram>, ProgramParameters const&>(ProgramParameters const&) {
+            return std::unique_ptr<Program<LineProgram>>(new Program<LineProgram>());
+        }
+    }
+}
+
+// Define QMapbox namespace implementations
 namespace QMapbox {
   Coordinate::Coordinate(double lat, double lon) : m_lat(lat), m_lon(lon) {}
   Coordinate::Coordinate() : m_lat(0), m_lon(0) {}
@@ -325,13 +436,13 @@ namespace QMapbox {
   }
 }
 
-// Define QMapboxGLSettings class methods
+// Implement QMapboxGLSettings
 QMapboxGLSettings::QMapboxGLSettings() {}
 QMapboxGLSettings::~QMapboxGLSettings() {}
 QString QMapboxGLSettings::accessToken() const { return QString(); }
 void QMapboxGLSettings::setAccessToken(const QString &token) {}
 
-// Define QMapboxGL class methods
+// Implement QMapboxGL
 QMapboxGL::QMapboxGL(QObject* parent, const QMapboxGLSettings& settings, const QSize& size, qreal pixelRatio)
     : QObject(parent) {}
 QMapboxGL::~QMapboxGL() {}
@@ -358,15 +469,16 @@ void QMapboxGL::addSource(const QString &sourceID, const QVariantMap &params) {}
 void QMapboxGL::addLayer(const QString &id, const QVariantMap &params) {}
 void QMapboxGL::addImage(const QString &name, const QImage &sprite) {}
 QMapbox::Feature QMapboxGL::queryRenderedFeatures(const QPointF &point, const QStringList &layerIDs) const {
-    return QMapbox::Feature(QMapbox::Feature::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
+    return QMapbox::Feature(QMapbox::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
 }
 QMapbox::Feature QMapboxGL::queryRenderedFeatures(const QRectF &geometry, const QStringList &layerIDs) const {
-    return QMapbox::Feature(QMapbox::Feature::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
+    return QMapbox::Feature(QMapbox::PointType, QMapbox::Coordinate(), QMapbox::PropertyMap());
 }
 EOF
     
+    # Compile with explicit namespace handling and export all symbols
     echo "Compiling comprehensive stub library..."
-    g++ -fPIC -shared -o libqmapboxgl.so stub.cpp \
+    g++ -fPIC -shared -o libqmapboxgl.so stub.cpp -fvisibility=default \
       -I/system/comma/usr/include \
       -I/system/comma/usr/include/qt \
       -I/system/comma/usr/include/qt/QtCore \
@@ -383,10 +495,126 @@ EOF
       chmod 644 /system/lib64/libqmapboxgl.so
       echo "Successfully built and installed comprehensive stub libqmapboxgl.so"
       
-      # Create symlink in phonelibs directory
+      # Create directory in phonelibs
       mkdir -p "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib"
       cp libqmapboxgl.so "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/"
       echo "Copied to $ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/libqmapboxgl.so"
+      
+      # Add include files
+      mkdir -p "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/include"
+      
+      # Create a simple QMapbox header
+      mkdir -p "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/include/QMapbox"
+      
+      cat > "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/include/QMapbox/QMapbox.hpp" << EOF
+#pragma once
+
+#include <QVariant>
+#include <QString>
+#include <QMap>
+#include <QSize>
+#include <vector>
+#include <memory>
+
+namespace QMapbox {
+
+class Coordinate {
+public:
+    double m_lat;
+    double m_lon;
+    Coordinate(double lat = 0, double lon = 0);
+};
+
+class CoordinateZoom {
+public:
+    Coordinate coordinate;
+    double zoom;
+    CoordinateZoom(const Coordinate& coordinate_, double zoom_);
+};
+
+class Coordinates {
+public:
+    Coordinates();
+};
+
+class CoordinatesCollection {
+public:
+    CoordinatesCollection();
+};
+
+class CoordinatesCollections {
+public:
+    CoordinatesCollections();
+};
+
+typedef std::map<QString, QVariant> PropertyMap;
+typedef QVariant IdentifierType;
+
+enum FeatureType {
+    PointType,
+    LineStringType,
+    PolygonType
+};
+
+class Feature {
+public:
+    FeatureType type;
+    PropertyMap properties;
+    IdentifierType identifier;
+    CoordinatesCollections geometry;
+    Feature(FeatureType type_, Coordinate const& coord, PropertyMap props = PropertyMap(), IdentifierType id_ = IdentifierType());
+};
+
+}
+EOF
+
+      cat > "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/include/QMapboxGL.hpp" << EOF
+#pragma once
+
+#include <QObject>
+#include <QSize>
+#include <QPointF>
+#include <QRectF>
+#include <QMapbox/QMapbox.hpp>
+
+class QMapboxGLSettings {
+public:
+    QMapboxGLSettings();
+    ~QMapboxGLSettings();
+    QString accessToken() const;
+    void setAccessToken(const QString &token);
+};
+
+class QMapboxGL : public QObject {
+public:
+    QMapboxGL(QObject* parent = nullptr, const QMapboxGLSettings& settings = QMapboxGLSettings(), const QSize& size = QSize(), qreal pixelRatio = 1);
+    ~QMapboxGL();
+    void setCoordinateZoom(const QMapbox::Coordinate &coordinate, double zoom);
+    void setStyleUrl(const QString &url);
+    void setStyleJson(const QString &json);
+    double bearing() const;
+    void setBearing(double degrees);
+    void addClass(const QString &className);
+    void removeClass(const QString &className);
+    bool hasClass(const QString &className) const;
+    void setClasses(const QStringList &classNames);
+    QStringList getClasses() const;
+    void setDefaultTransitionDuration(qint64 duration);
+    double getMaxZoom() const;
+    double getMinZoom() const;
+    double getZoom() const;
+    void setZoom(double zoom);
+    void setMaxZoom(double max);
+    void setMinZoom(double min);
+    double getPitch() const;
+    void setPitch(double pitch);
+    void addSource(const QString &sourceID, const QVariantMap &params);
+    void addLayer(const QString &id, const QVariantMap &params);
+    void addImage(const QString &name, const QImage &sprite);
+    QMapbox::Feature queryRenderedFeatures(const QPointF &point, const QStringList &layerIDs = QStringList()) const;
+    QMapbox::Feature queryRenderedFeatures(const QRectF &geometry, const QStringList &layerIDs = QStringList()) const;
+};
+EOF
     else
       echo "Error: Failed to build stub library."
       exit 1
@@ -396,12 +624,16 @@ EOF
     cd /tmp
     rm -rf $BUILD_DIR
   else
-    echo "libqmapboxgl.so already exists in /system/lib64/"
+    echo "Using existing mapbox library, skipping rebuild"
     
-    # Create symlink in phonelibs directory
+    # Ensure the phonelibs directory has the library
     mkdir -p "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib"
-    cp /system/lib64/libqmapboxgl.so "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/"
-    echo "Copied existing /system/lib64/libqmapboxgl.so to phonelibs/mapbox-gl-native-qt/aarch64/lib/"
+    
+    # If the library exists in system but not in phonelibs, copy it
+    if [ -f "/system/lib64/libqmapboxgl.so" ] && [ ! -f "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/libqmapboxgl.so" ]; then
+      cp /system/lib64/libqmapboxgl.so "$ORIGINAL_DIR/phonelibs/mapbox-gl-native-qt/aarch64/lib/"
+      echo "Copied existing /system/lib64/libqmapboxgl.so to phonelibs/mapbox-gl-native-qt/aarch64/lib/"
+    fi
   fi
 fi
 
@@ -410,5 +642,5 @@ cd "$ORIGINAL_DIR"
 echo "Returning to original directory: $ORIGINAL_DIR"
 
 # Continue with the build
-echo "Running scons with arguments: $@"
-scons "$@"
+echo "Running scons with arguments: ${SCONS_ARGS[@]}"
+scons "${SCONS_ARGS[@]}"

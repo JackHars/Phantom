@@ -24,3 +24,13 @@ QMapbox::CoordinatesCollections coordinate_list_to_collection(QList<QGeoCoordina
 float minimum_distance(QGeoCoordinate a, QGeoCoordinate b, QGeoCoordinate p);
 std::optional<QMapbox::Coordinate> coordinate_from_param(std::string param);
 float distance_along_geometry(QList<QGeoCoordinate> geometry, QGeoCoordinate pos);
+
+// New helper functions for enhanced navigation
+bool search_for_poi(const QString &category, const QGeoCoordinate &currentLocation, QList<QGeoCoordinate> &results);
+QList<QGeoCoordinate> calculate_waypoint_route(const QGeoCoordinate &start, 
+                                             const QGeoCoordinate &end, 
+                                             const QList<QGeoCoordinate> &waypoints);
+bool save_favorite_location(const QGeoCoordinate &location, const QString &name, const QString &label);
+bool get_route_estimate(const QGeoCoordinate &start, const QGeoCoordinate &end, 
+                       double &distance_meters, double &time_seconds,
+                       bool avoid_tolls = false, bool avoid_highways = false, bool avoid_ferries = false);

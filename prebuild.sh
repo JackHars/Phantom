@@ -256,23 +256,9 @@ namespace mbgl {
             CustomLayer(const std::string& id, std::unique_ptr<CustomLayerHost> host) {}
         };
     }
-    
-    namespace gl {
-        class RendererBackend {
-        public:
-            RendererBackend(mbgl::gfx::ContextMode) {}
-            virtual ~RendererBackend() {}
-            void createContext() {}
-            void assumeFramebufferBinding(unsigned int) {}
-            void setFramebufferBinding(unsigned int) {}
-            void setViewport(int, int, const Size&) {}
-            void assumeViewport(int, int, const Size&) {}
-        };
-    }
-    
+
     namespace gfx {
         enum class ContextMode { Unique, Shared };
-        enum class Backend { Type };
         
         template <typename T>
         class Program {
@@ -280,141 +266,29 @@ namespace mbgl {
             Program() {}
             virtual ~Program() {}
         };
+        
+        class Backend {
+        public:
+            enum Type { OpenGL };
+            
+            template <Type type, typename ProgramType, typename... Args>
+            static std::unique_ptr<ProgramType> Create(Args&&... args) {
+                return std::unique_ptr<ProgramType>(new ProgramType());
+            }
+        };
     }
-}
-
-// Explicit template specializations to match what the linker expects
-namespace mbgl {
-    namespace gfx {
-        template <>
-        std::unique_ptr<Program<DebugProgram>> Backend::Create<(Backend::Type)0, Program<DebugProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<DebugProgram>>(new Program<DebugProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<SymbolSDFIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolSDFIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<SymbolSDFIconProgram>>(new Program<SymbolSDFIconProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<HeatmapProgram>> Backend::Create<(Backend::Type)0, Program<HeatmapProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<HeatmapProgram>>(new Program<HeatmapProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillExtrusionPatternProgram>> Backend::Create<(Backend::Type)0, Program<FillExtrusionPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillExtrusionPatternProgram>>(new Program<FillExtrusionPatternProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<SymbolSDFTextProgram>> Backend::Create<(Backend::Type)0, Program<SymbolSDFTextProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<SymbolSDFTextProgram>>(new Program<SymbolSDFTextProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<LineSDFProgram>> Backend::Create<(Backend::Type)0, Program<LineSDFProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<LineSDFProgram>>(new Program<LineSDFProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<LinePatternProgram>> Backend::Create<(Backend::Type)0, Program<LinePatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<LinePatternProgram>>(new Program<LinePatternProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<HeatmapTextureProgram>> Backend::Create<(Backend::Type)0, Program<HeatmapTextureProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<HeatmapTextureProgram>>(new Program<HeatmapTextureProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<HillshadeProgram>> Backend::Create<(Backend::Type)0, Program<HillshadeProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<HillshadeProgram>>(new Program<HillshadeProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<ClippingMaskProgram>> Backend::Create<(Backend::Type)0, Program<ClippingMaskProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<ClippingMaskProgram>>(new Program<ClippingMaskProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<RasterProgram>> Backend::Create<(Backend::Type)0, Program<RasterProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<RasterProgram>>(new Program<RasterProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<HillshadePrepareProgram>> Backend::Create<(Backend::Type)0, Program<HillshadePrepareProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<HillshadePrepareProgram>>(new Program<HillshadePrepareProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<SymbolIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<SymbolIconProgram>>(new Program<SymbolIconProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillProgram>> Backend::Create<(Backend::Type)0, Program<FillProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillProgram>>(new Program<FillProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<CollisionCircleProgram>> Backend::Create<(Backend::Type)0, Program<CollisionCircleProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<CollisionCircleProgram>>(new Program<CollisionCircleProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<SymbolTextAndIconProgram>> Backend::Create<(Backend::Type)0, Program<SymbolTextAndIconProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<SymbolTextAndIconProgram>>(new Program<SymbolTextAndIconProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<CollisionBoxProgram>> Backend::Create<(Backend::Type)0, Program<CollisionBoxProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<CollisionBoxProgram>>(new Program<CollisionBoxProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillPatternProgram>> Backend::Create<(Backend::Type)0, Program<FillPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillPatternProgram>>(new Program<FillPatternProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<LineGradientProgram>> Backend::Create<(Backend::Type)0, Program<LineGradientProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<LineGradientProgram>>(new Program<LineGradientProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillExtrusionProgram>> Backend::Create<(Backend::Type)0, Program<FillExtrusionProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillExtrusionProgram>>(new Program<FillExtrusionProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<BackgroundProgram>> Backend::Create<(Backend::Type)0, Program<BackgroundProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<BackgroundProgram>>(new Program<BackgroundProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillOutlinePatternProgram>> Backend::Create<(Backend::Type)0, Program<FillOutlinePatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillOutlinePatternProgram>>(new Program<FillOutlinePatternProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<CircleProgram>> Backend::Create<(Backend::Type)0, Program<CircleProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<CircleProgram>>(new Program<CircleProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<FillOutlineProgram>> Backend::Create<(Backend::Type)0, Program<FillOutlineProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<FillOutlineProgram>>(new Program<FillOutlineProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<BackgroundPatternProgram>> Backend::Create<(Backend::Type)0, Program<BackgroundPatternProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<BackgroundPatternProgram>>(new Program<BackgroundPatternProgram>());
-        }
-        
-        template <>
-        std::unique_ptr<Program<LineProgram>> Backend::Create<(Backend::Type)0, Program<LineProgram>, ProgramParameters const&>(ProgramParameters const&) {
-            return std::unique_ptr<Program<LineProgram>>(new Program<LineProgram>());
-        }
+    
+    namespace gl {
+        class RendererBackend {
+        public:
+            RendererBackend(gfx::ContextMode) {}
+            virtual ~RendererBackend() {}
+            void createContext() {}
+            void assumeFramebufferBinding(unsigned int) {}
+            void setFramebufferBinding(unsigned int) {}
+            void setViewport(int, int, const Size&) {}
+            void assumeViewport(int, int, const Size&) {}
+        };
     }
 }
 

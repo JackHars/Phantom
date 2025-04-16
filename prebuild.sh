@@ -20,10 +20,6 @@ if [ "$(uname -m)" = "aarch64" ]; then
     sed -i 's|_qt5gui_find_extra_libs(EGL ".*libEGL.so" "" "")|_qt5gui_find_extra_libs(EGL "/system/lib/libEGL.so" "" "")|g' "$QT_CONFIG_FILE"
     sed -i 's|_qt5gui_find_extra_libs(OPENGL ".*libGLESv2.so" "" "")|_qt5gui_find_extra_libs(OPENGL "/system/lib/libGLESv2.so" "" "")|g' "$QT_CONFIG_FILE"
     
-    # Double-check the actual paths
-    echo "Verifying actual library paths:"
-    ls -la /system/lib/libEGL.so /system/lib/libGLESv2.so 2>/dev/null || true
-    
     echo "Updated Qt5Gui configuration file"
   else
     echo "Warning: Qt5Gui configuration file not found at $QT_CONFIG_FILE"
@@ -56,26 +52,10 @@ if [ "$(uname -m)" = "aarch64" ]; then
     # Build directly in the third_party directory
     cd "$(dirname $0)/third_party/mapbox-gl-native"
     
-    # Use direct paths for libraries
-    EGL_LIB="/system/lib/libEGL.so"
-    GLES_LIB="/system/lib/libGLESv2.so"
-    
-    echo "Using EGL library: $EGL_LIB"
-    echo "Using GLES library: $GLES_LIB"
-    
-    # Create custom CMake settings to handle OpenGL
-    echo "Creating custom CMake configuration..."
-    cat > custom.cmake << EOF
-set(OPENGL_opengl_LIBRARY "${GLES_LIB}")
-set(OPENGL_glx_LIBRARY "${GLES_LIB}")
-set(OPENGL_INCLUDE_DIR /system/include)
-set(GLX TRUE)
-set(Qt5Gui_DIR /system/comma/usr/lib/cmake/Qt5Gui)
-EOF
-    
-    # Build mapbox with custom configuration
+    # Simple build process
+    echo "Building mapbox-gl-native..."
     mkdir -p build && cd build
-    cmake -C ../custom.cmake -DMBGL_WITH_QT=ON -DMBGL_WITH_OPENGL=OFF -DMBGL_WITH_OPENGLES=ON ..
+    cmake ..
     make -j$(nproc) mbgl-qt
     
     # Use direct path to the built library

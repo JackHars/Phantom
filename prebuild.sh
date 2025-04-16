@@ -55,7 +55,15 @@ if [ "$(uname -m)" = "aarch64" ]; then
     # Simple build process
     echo "Building mapbox-gl-native..."
     mkdir -p build && cd build
-    cmake -DMBGL_WITH_OPENGL=OFF -DMBGL_WITH_OPENGLES=ON ..
+    
+    # Configure cmake with Android-specific settings
+    cmake -DMBGL_WITH_OPENGL=OFF \
+          -DMBGL_WITH_OPENGLES=ON \
+          -DCMAKE_SYSTEM_NAME=Android \
+          -DCMAKE_SYSTEM_VERSION=21 \
+          -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+          ..
+    
     make -j$(nproc) mbgl-qt
     
     # Use direct path to the built library

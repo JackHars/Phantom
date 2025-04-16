@@ -7,6 +7,7 @@
 #include "selfdrive/ui/qt/qt_window.h"
 #include "selfdrive/ui/qt/request_repeater.h"
 #include "selfdrive/ui/qt/widgets/controls.h"
+#include "selfdrive/ui/qt/widgets/input.h"
 #include "selfdrive/ui/qt/widgets/scrollview.h"
 
 static QString shorten(const QString &str, int max_len) {
@@ -19,6 +20,60 @@ MapPanel::MapPanel(QWidget* parent) : QWidget(parent) {
   QWidget * main_widget = new QWidget;
   QVBoxLayout *main_layout = new QVBoxLayout(main_widget);
   const int icon_size = 200;
+
+  // Add destination button - more prominently placed at the top
+  QWidget *add_dest_container = new QWidget;
+  QHBoxLayout *add_dest_layout = new QHBoxLayout(add_dest_container);
+  add_dest_layout->setContentsMargins(40, 20, 40, 20);
+  
+  QPushButton *add_dest_button = new QPushButton("Add Destination");
+  add_dest_button->setStyleSheet(R"(
+    QPushButton {
+      padding: 20px;
+      border-radius: 10px;
+      font-size: 55px;
+      font-weight: 500;
+      background-color: #364DEF;
+    }
+    QPushButton:pressed {
+      background-color: #304AD0;
+    }
+  )");
+  QObject::connect(add_dest_button, &QPushButton::clicked, [=]() {
+    QString destination = InputDialog::getText("Enter your destination", this);
+    if (!destination.isEmpty()) {
+      params.put("Address", destination.toStdString());
+      system("python3 /data/openpilot/selfdrive/ui/qt/maps/set_destination.py");
+      updateCurrentRoute();
+    }
+  });
+  
+  QPushButton *map_search_button = new QPushButton();
+  map_search_button->setIcon(QIcon("../assets/navigation/map_search.png"));
+  map_search_button->setIconSize(QSize(64, 64));
+  map_search_button->setStyleSheet(R"(
+    QPushButton {
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #4D4D4D;
+    }
+    QPushButton:pressed {
+      background-color: #404040;
+    }
+  )");
+  map_search_button->setFixedSize(120, 120);
+  QObject::connect(map_search_button, &QPushButton::clicked, [=]() {
+    // Launch the map search interface or send a signal to activate map mode
+    emit openMapSearch();
+  });
+  
+  add_dest_layout->addWidget(add_dest_button);
+  add_dest_layout->addSpacing(20);
+  add_dest_layout->addWidget(map_search_button);
+  main_layout->addWidget(add_dest_container);
+  main_layout->addSpacing(20);
+  main_layout->addWidget(horizontal_line());
+  main_layout->addSpacing(20);
 
   // Home
   QHBoxLayout *home_layout = new QHBoxLayout;
@@ -61,16 +116,65 @@ MapPanel::MapPanel(QWidget* parent) : QWidget(parent) {
     QVBoxLayout *current_layout = new QVBoxLayout(current_widget);
 
     QLabel *title = new QLabel("Current Destination");
-    title->setStyleSheet("font-size: 55px");
+    title->setStyleSheet("font-size: 55px; font-weight: 500; margin-bottom: 10px;");
     current_layout->addWidget(title);
 
-    current_route = new ButtonControl("", "CLEAR");
-    current_route->setStyleSheet("padding-left: 40px;");
-    current_layout->addWidget(current_route);
-    QObject::connect(current_route, &ButtonControl::clicked, [=]() {
+    QWidget *dest_container = new QWidget();
+    QHBoxLayout *dest_layout = new QHBoxLayout(dest_container);
+    dest_layout->setContentsMargins(20, 10, 20, 10);
+    
+    QLabel *dest_icon = new QLabel();
+    dest_icon->setPixmap(QPixmap("../assets/navigation/destination.png").scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    dest_layout->addWidget(dest_icon);
+    dest_layout->addSpacing(20);
+    
+    QLabel *dest_text = new QLabel();
+    dest_text->setWordWrap(true);
+    dest_text->setStyleSheet("font-size: 45px; font-weight: 400;");
+    dest_layout->addWidget(dest_text, 1);
+    
+    QPushButton *navigate_btn = new QPushButton("GO");
+    navigate_btn->setStyleSheet(R"(
+      QPushButton {
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-size: 45px;
+        font-weight: 500;
+        background-color: #25D366;
+      }
+      QPushButton:pressed {
+        background-color: #20B355;
+      }
+    )");
+    QObject::connect(navigate_btn, &QPushButton::clicked, [=]() {
+      emit closeSettings();
+    });
+    dest_layout->addWidget(navigate_btn);
+    
+    QPushButton *clear_btn = new QPushButton("×");
+    clear_btn->setStyleSheet(R"(
+      QPushButton {
+        padding: 15px;
+        border-radius: 25px;
+        font-size: 45px;
+        background-color: #FF5A5A;
+      }
+      QPushButton:pressed {
+        background-color: #D44A4A;
+      }
+    )");
+    clear_btn->setFixedSize(60, 60);
+    QObject::connect(clear_btn, &QPushButton::clicked, [=]() {
       params.remove("NavDestination");
       updateCurrentRoute();
     });
+    dest_layout->addWidget(clear_btn);
+    
+    current_layout->addWidget(dest_container);
+    
+    // Store references to update later
+    current_route_container = dest_container;
+    current_route_text = dest_text;
 
     current_layout->addSpacing(10);
     current_layout->addWidget(horizontal_line());
@@ -180,7 +284,7 @@ void MapPanel::updateCurrentRoute() {
   if (dest.size() && !doc.isNull()) {
     auto name = doc["place_name"].toString();
     auto details = doc["place_details"].toString();
-    current_route->setTitle(shorten(name + " " + details, 42));
+    current_route_text->setText(shorten(name + " " + details, 42));
   }
   current_widget->setVisible(dest.size() && !doc.isNull());
 }

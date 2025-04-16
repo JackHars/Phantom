@@ -24,7 +24,7 @@
 #include "selfdrive/ui/ui.h"
 #include "selfdrive/ui/qt/util.h"
 #include "selfdrive/ui/qt/qt_window.h"
-#include "selfdrive/ui/qt/widgets/nav_control.h"
+#include "selfdrive/ui/qt/widgets/offroad_alerts.h"
 
 TogglesPanel::TogglesPanel(QWidget *parent) : ListWidget(parent) {
   auto params = Params();
@@ -279,7 +279,6 @@ QWidget * network_panel(QWidget * parent) {
   // SSH key management
   list->addItem(new SshToggle());
   list->addItem(new SshControl());
-  list->addItem(new NavControl());
 
   layout->addWidget(list);
   layout->addStretch(1);

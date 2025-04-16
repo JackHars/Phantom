@@ -31,8 +31,10 @@ private:
   QLabel *home_address, *work_address;
   QVBoxLayout *recent_layout;
   QWidget *current_widget;
-  ButtonControl *current_route;
+  QWidget *current_route_container;
+  QLabel *current_route_text;
 
 signals:
   void closeSettings();
+  void openMapSearch();
 };

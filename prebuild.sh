@@ -29,34 +29,36 @@ if [ "$(uname -m)" = "aarch64" ]; then
     echo "Warning: Qt5Gui configuration file not found at $QT_CONFIG_FILE"
   fi
   
-  # Now check if libqmapboxgl.so exists in /system/lib64
-  if [ ! -f "/system/lib64/libqmapboxgl.so" ]; then
+  # Check for precompiled library in our repo
+  REPO_LIB="$(dirname $0)/phonelibs/mapbox-gl-native-qt/aarch64/libqmapboxgl.so"
+  
+  # If we already have the library in our repo, just copy it to the system
+  if [ -f "$REPO_LIB" ]; then
+    echo "Using prebuilt libqmapboxgl.so from repository..."
+    
+    # Mount system as writable if needed
+    mount -o rw,remount /system 2>/dev/null || true
+    
+    # Copy to system
+    cp "$REPO_LIB" /system/lib64/libqmapboxgl.so
+    chmod 644 /system/lib64/libqmapboxgl.so
+    echo "Installed libqmapboxgl.so from repository"
+  # If not in our repo and not in the system, build it
+  elif [ ! -f "/system/lib64/libqmapboxgl.so" ]; then
     echo "Building and installing libqmapboxgl.so..."
     
     # Mount system as writable if needed
     mount -o rw,remount /system 2>/dev/null || true
     
-    # Set up build environment
-    BUILD_DIR=$(mktemp -d)
-    echo "Building in temporary directory: $BUILD_DIR"
+    # Ensure the phonelibs directory exists
+    mkdir -p "$(dirname $0)/phonelibs/mapbox-gl-native-qt/aarch64"
     
-    # Copy the local mapbox-gl-native to the build directory
-    cp -r "$(dirname $0)/third_party/mapbox-gl-native" "$BUILD_DIR/"
-    cd "$BUILD_DIR/mapbox-gl-native"
+    # Build directly in the third_party directory
+    cd "$(dirname $0)/third_party/mapbox-gl-native"
     
-    # Find the actual library paths
-    EGL_LIB=$(find /system -name "libEGL.so" | head -1)
-    GLES_LIB=$(find /system -name "libGLESv2.so" | head -1)
-    
-    if [ -z "$EGL_LIB" ]; then
-      echo "Warning: Could not find libEGL.so, using default path"
-      EGL_LIB="/system/lib/libEGL.so"
-    fi
-    
-    if [ -z "$GLES_LIB" ]; then
-      echo "Warning: Could not find libGLESv2.so, using default path"
-      GLES_LIB="/system/lib/libGLESv2.so"
-    fi
+    # Use direct paths for libraries
+    EGL_LIB="/system/lib/libEGL.so"
+    GLES_LIB="/system/lib/libGLESv2.so"
     
     echo "Using EGL library: $EGL_LIB"
     echo "Using GLES library: $GLES_LIB"
@@ -76,24 +78,28 @@ EOF
     cmake -C ../custom.cmake -DMBGL_WITH_QT=ON -DMBGL_WITH_OPENGL=OFF -DMBGL_WITH_OPENGLES=ON ..
     make -j$(nproc) mbgl-qt
     
-    # The built library should be in a specific location based on the build system
-    # Qt build typically puts the library in a specific location
-    EXPECTED_QT_LIB="./platform/qt/libqmapboxgl.so"
+    # Use direct path to the built library
+    BUILT_QT_LIB="./platform/qt/libqmapboxgl.so"
     
-    if [ -f "$EXPECTED_QT_LIB" ]; then
-      cp "$EXPECTED_QT_LIB" /system/lib64/libqmapboxgl.so
+    if [ -f "$BUILT_QT_LIB" ]; then
+      # Copy to system
+      cp "$BUILT_QT_LIB" /system/lib64/libqmapboxgl.so
       chmod 644 /system/lib64/libqmapboxgl.so
+      
+      # Also copy to our phonelibs directory for future use
+      cp "$BUILT_QT_LIB" "$(dirname $0)/phonelibs/mapbox-gl-native-qt/aarch64/libqmapboxgl.so"
+      
       echo "Successfully built and installed libqmapboxgl.so"
+      echo "The library has also been saved to the repository for future use"
     else
-      echo "Error: Could not find built libqmapboxgl.so at expected location: $EXPECTED_QT_LIB"
+      echo "Error: Could not find built libqmapboxgl.so at expected location: $BUILT_QT_LIB"
       echo "Current directory contents:"
       ls -R ./platform/
       exit 1
     fi
     
-    # Clean up
-    cd /tmp
-    rm -rf $BUILD_DIR
+    # Return to original directory
+    cd "$(dirname $0)"
   else
     echo "libqmapboxgl.so already exists in /system/lib64/"
   fi

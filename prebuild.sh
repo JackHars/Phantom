@@ -55,7 +55,7 @@ if [ "$(uname -m)" = "aarch64" ]; then
     # Simple build process
     echo "Building mapbox-gl-native..."
     mkdir -p build && cd build
-    cmake ..
+    cmake -DMBGL_WITH_OPENGL=OFF -DMBGL_WITH_OPENGLES=ON ..
     make -j$(nproc) mbgl-qt
     
     # Use direct path to the built library

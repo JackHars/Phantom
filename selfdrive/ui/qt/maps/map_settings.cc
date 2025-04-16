@@ -663,7 +663,7 @@ void MapPanel::setupRouteOptionsPanel() {
     
     // Store route preference in params
     int prefIndex = route_pref->currentIndex();
-    params.putInt("NavRoutePreference", prefIndex);
+    params.put("NavRoutePreference", std::to_string(prefIndex));
   });
   
   options_layout->addWidget(apply_options_btn);
@@ -786,9 +786,9 @@ void MapPanel::setupMapViewPanel() {
     emit poiVisibilityToggled(show_poi_checkbox->isChecked());
     
     // Store settings in params
-    params.putBool("NavShowTraffic", traffic_checkbox->isChecked());
-    params.putBool("NavShowPOI", show_poi_checkbox->isChecked());
-    params.putInt("NavMapMode", mode);
+    params.put("NavShowTraffic", traffic_checkbox->isChecked() ? "1" : "0");
+    params.put("NavShowPOI", show_poi_checkbox->isChecked() ? "1" : "0");
+    params.put("NavMapMode", std::to_string(mode));
   });
   
   view_layout->addWidget(apply_view_btn);
@@ -1026,9 +1026,9 @@ void MapPanel::saveAsFavorite(const QJsonObject &place, const QString &label) {
 // Set route options
 void MapPanel::setRouteOptions(bool avoidTolls, bool avoidHighways, bool avoidFerries) {
   // Store route options in params
-  params.putBool("NavAvoidTolls", avoidTolls);
-  params.putBool("NavAvoidHighways", avoidHighways);
-  params.putBool("NavAvoidFerries", avoidFerries);
+  params.put("NavAvoidTolls", avoidTolls ? "1" : "0");
+  params.put("NavAvoidHighways", avoidHighways ? "1" : "0");
+  params.put("NavAvoidFerries", avoidFerries ? "1" : "0");
   
   // Update UI to reflect settings
   avoid_tolls_checkbox->setChecked(avoidTolls);
@@ -1046,7 +1046,7 @@ void MapPanel::setRouteOptions(bool avoidTolls, bool avoidHighways, bool avoidFe
 // Toggle map mode (day/night/satellite)
 void MapPanel::toggleMapMode(int mode) {
   // Store the selected mode in params
-  params.putInt("NavMapMode", mode);
+  params.put("NavMapMode", std::to_string(mode));
   
   // Update UI to reflect current mode
   day_mode_btn->setChecked(mode == 0);

@@ -80,9 +80,9 @@ if [ -z "$OPENPILOT_ENV" ]; then
 fi
 
 # do the rest of the git checkout
-git lfs pull
-git submodule init
-git submodule update
+#git lfs pull
+#git submodule init
+#git submodule update
 
 # install python
 PATH=$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH
@@ -93,8 +93,15 @@ eval "$(pyenv init -)"
 
 # **** in python env ****
 pip install --upgrade pip==20.2.4
+pip install setuptools==47.1.0
+pip install packaging==20.9
 pip install pipenv==2020.8.13
-pipenv install --dev --system --deploy
+
+# Clean any existing virtual environments and lock files
+rm -rf .venv Pipfile.lock
+
+# Install dependencies without virtual environment
+PIPENV_DONT_LOAD_ENV=1 pipenv install --dev --system --skip-lock
 
 echo
 echo "----   FINISH OPENPILOT SETUP   ----"

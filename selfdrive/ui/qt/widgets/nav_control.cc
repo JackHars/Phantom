@@ -21,8 +21,10 @@ NavControl::NavControl() : ButtonControl("Navigation Destination", "", "Enter ad
       }
     } else {
       params.remove("Address");
-      params.remove("NavDestination");
+      // Don't remove NavDestination, just clear address
+      // params.remove("NavDestination");
       refresh();
+      emit clearRoute();
     }
   });
 

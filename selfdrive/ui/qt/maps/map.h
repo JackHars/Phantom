@@ -22,10 +22,15 @@
 #include <QWheelEvent>
 #include <QMap>
 #include <QPixmap>
+#include <QPushButton>
+#include <QQuickWidget>
 
 #include "selfdrive/common/params.h"
 #include "selfdrive/common/util.h"
 #include "cereal/messaging/messaging.h"
+#include "geocoder.h"
+#include "selfdrive/ui/ui.h"
+#include "search_results.h"
 
 class MapInstructions : public QWidget {
   Q_OBJECT
@@ -66,6 +71,9 @@ public:
 
 public slots:
   void updateETA(float seconds, float seconds_typical, float distance);
+  
+signals:
+  void visibilityChanged(bool visible);
 };
 
 class MapWindow : public QOpenGLWidget {
@@ -75,21 +83,22 @@ public:
   MapWindow(const QMapboxGLSettings &);
   ~MapWindow();
 
-private:
-  void initializeGL() final;
-  void paintGL() final;
+  void setVisible(bool visible) override;
+  void initializeGL() override;
+  void paintGL() override;
   void resizeGL(int w, int h) override;
+  void mousePressEvent(QMouseEvent *ev) override;
+  void mouseDoubleClickEvent(QMouseEvent *ev) override;
+  void mouseMoveEvent(QMouseEvent *ev) override;
+  void wheelEvent(QWheelEvent *ev) override;
+  bool event(QEvent *event) override;
 
+private:
   QMapboxGLSettings m_settings;
   QScopedPointer<QMapboxGL> m_map;
 
   void initLayers();
 
-  void mousePressEvent(QMouseEvent *ev) final;
-  void mouseDoubleClickEvent(QMouseEvent *ev) final;
-  void mouseMoveEvent(QMouseEvent *ev) final;
-  void wheelEvent(QWheelEvent *ev) final;
-  bool event(QEvent *event) final;
   bool gestureEvent(QGestureEvent *event);
   void pinchTriggered(QPinchGesture *gesture);
 
@@ -120,6 +129,24 @@ private:
 
   MapInstructions* map_instructions;
   MapETA* map_eta;
+  QPushButton* search_button;
+  QPushButton* toggle_fullscreen_button;
+  bool is_fullscreen = false;
+  QRect original_geometry;
+  void toggleFullscreen();
+  void updateToggleButton();
+  
+  // Geocoding and search
+  Geocoder* geocoder;
+  bool token_verified = false;
+  void searchLocation();
+  void handleSearchResult(bool success, QMapbox::Coordinate coordinate, QString name, QString address);
+  void handleSearchResults(bool success, const QVector<LocationResult> &results, const QString &query, const QString &errorMessage);
+  void handleTokenVerification(bool valid, QString message);
+  void handleSearchResultSelected(const LocationResult &result);
+
+  // Search results UI
+  SearchResultsWidget* search_results_widget;
 
   QMapbox::Coordinate nav_destination;
 
@@ -128,7 +155,7 @@ private:
   int recompute_backoff = 0;
   int recompute_countdown = 0;
   void calculateRoute(QMapbox::Coordinate destination);
-  void clearRoute();
+  void clearRoute(bool removeDestination = false);
   bool shouldRecompute();
   void updateETA();
 
@@ -139,10 +166,12 @@ private slots:
 
 public slots:
   void offroadTransition(bool offroad);
+  void clearRouteVisual();
 
 signals:
   void distanceChanged(float distance);
   void instructionsChanged(QMap<QString, QVariant> banner, bool full);
   void ETAChanged(float seconds, float seconds_typical, float distance);
+  void fullscreenToggled(bool is_fullscreen);
 };
 

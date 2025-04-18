@@ -1,7 +1,7 @@
 {
-    "acados_include_path": "/media/sf_openpilot/phonelibs/acados/acados/include",
-    "acados_lib_path": "/media/sf_openpilot/phonelibs/acados/acados/lib",
-    "code_export_directory": "/media/sf_openpilot/selfdrive/controls/lib/longitudinal_mpc_lib/c_generated_code",
+    "acados_include_path": "/home/jack/openpilot/phonelibs/acados/acados/include",
+    "acados_lib_path": "/home/jack/openpilot/phonelibs/acados/acados/lib",
+    "code_export_directory": "/home/jack/openpilot/selfdrive/controls/lib/longitudinal_mpc_lib/c_generated_code",
     "constraints": {
         "C": [],
         "C_e": [],

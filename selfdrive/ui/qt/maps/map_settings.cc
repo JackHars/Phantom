@@ -165,7 +165,8 @@ MapPanel::MapPanel(QWidget* parent) : QWidget(parent) {
     )");
     clear_btn->setFixedSize(60, 60);
     QObject::connect(clear_btn, &QPushButton::clicked, [=]() {
-      params.remove("NavDestination");
+      // Instead of removing NavDestination, emit a signal to clear the route visually
+      emit clearRoute();
       updateCurrentRoute();
     });
     dest_layout->addWidget(clear_btn);

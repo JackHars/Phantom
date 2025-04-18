@@ -19,4 +19,7 @@ private:
 
   void refresh();
   void getDest(const QString &destination);
+
+signals:
+  void clearRoute();
 };

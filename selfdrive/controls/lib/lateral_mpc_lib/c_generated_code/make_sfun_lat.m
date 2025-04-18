@@ -47,7 +47,7 @@ SOURCES = { ...
             'acados_solver_lat.c'
           };
 
-INC_PATH = '/media/sf_openpilot/phonelibs/acados/acados/include';
+INC_PATH = '/home/jack/openpilot/phonelibs/acados/acados/include';
 
 INCS = {['-I', fullfile(INC_PATH, 'blasfeo', 'include')], ...
         ['-I', fullfile(INC_PATH, 'hpipm', 'include')], ...
@@ -63,7 +63,7 @@ COMPDEFINES = 'COMPDEFINES=$COMPDEFINES';
 
 
 
-LIB_PATH = ['-L', fullfile('/media/sf_openpilot/phonelibs/acados/acados/lib')];
+LIB_PATH = ['-L', fullfile('/home/jack/openpilot/phonelibs/acados/acados/lib')];
 
 LIBS = {'-lacados', '-lhpipm', '-lblasfeo'};
 

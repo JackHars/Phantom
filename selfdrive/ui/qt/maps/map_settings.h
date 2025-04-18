@@ -37,4 +37,5 @@ private:
 signals:
   void closeSettings();
   void openMapSearch();
+  void clearRoute();
 };

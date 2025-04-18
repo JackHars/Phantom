@@ -169,7 +169,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"LastUpdateTime", PERSISTENT},
     {"LiveParameters", PERSISTENT},
     {"MapboxToken", PERSISTENT | DONT_LOG},
-    {"NavDestination", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_OFF},
+    {"NavDestination", PERSISTENT},
     {"NavSettingTime24h", PERSISTENT},
     {"OpenpilotEnabledToggle", PERSISTENT},
     {"PandaDongleId", CLEAR_ON_MANAGER_START | CLEAR_ON_PANDA_DISCONNECT},
@@ -208,7 +208,7 @@ std::unordered_map<std::string, uint32_t> keys = {
     {"Offroad_TemperatureTooHigh", CLEAR_ON_MANAGER_START},
     {"Offroad_UnofficialHardware", CLEAR_ON_MANAGER_START},
     {"Offroad_UpdateFailed", CLEAR_ON_MANAGER_START},
-    {"Address", CLEAR_ON_MANAGER_START | CLEAR_ON_IGNITION_OFF}
+    {"Address", PERSISTENT}
 };
 
 } // namespace

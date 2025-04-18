@@ -31,7 +31,7 @@
 
 ---
 
-## Table of Contents
+## 📖 Table of Contents
 
 - [Overview](#overview)
 - [Target Audience](#target-audience)
@@ -51,7 +51,7 @@
 
 ---
 
-## Overview
+## 📝 Overview
 
 Phantom is an open-source driver assistance system derived from the `openpilot` codebase, specifically forked from version 0.8.9. It focuses on maintaining robust support for the Comma 2 hardware while integrating custom driving features developed independently from the main `openpilot` project. This fork aims to provide a tailored and enhanced experience for users seeking specific functionalities or continued use of legacy hardware.
 
@@ -59,7 +59,7 @@ Part of the broader [RetroPilot](https://github.com/RetroPilot) community effort
 
 ---
 
-## Target Audience
+## 🎯 Target Audience
 
 This fork is primarily intended for:
 
@@ -69,7 +69,7 @@ This fork is primarily intended for:
 
 ---
 
-## Why Phantom?
+## 🤔 Why Phantom?
 
 As the official `openpilot` project evolves, hardware support and feature priorities naturally change. Phantom provides a dedicated platform offering:
 
@@ -79,7 +79,7 @@ As the official `openpilot` project evolves, hardware support and feature priori
 
 ---
 
-## Key Features
+## ✨ Key Features
 
 Phantom integrates the core `openpilot` functionality (based on v0.8.9) with several distinctive modifications:
 
@@ -125,7 +125,7 @@ Inspired by early community contributions from [Arne Schwarck](https://github.co
 
 ---
 
-## Requirements
+## ✅ Requirements
 
 Ensure your setup meets the following criteria before proceeding with installation:
 
@@ -133,13 +133,14 @@ Ensure your setup meets the following criteria before proceeding with installati
 |-----------|---------------|-------|
 | **Vehicle** | Compatible Vehicle | Refer to `openpilot` 0.8.9 compatibility lists for guidance. |
 | **Hardware** | Comma Two | **Recommended.** |
-|           | Comma Three / EON | Compatibility may vary significantly; support not guaranteed. |
+|           | EON or OP3T | Compatibility may vary significantly; support not guaranteed. |
+| **Operating System** | Ubuntu 20.04 | Compatible for development and testing on PC hardware. |
 | **Internet** | Stable Connection | Required for initial setup, navigation map data, traffic info, and potential updates. |
 | **API Key** | Mapbox API Key | Obtain from [mapbox.com](https://www.mapbox.com/) (free tier available). Required for navigation. |
 
 ---
 
-## Installation
+## 🛠️ Installation
 
 Follow these steps meticulously to install Phantom on your Comma device:
 
@@ -160,7 +161,7 @@ Follow these steps meticulously to install Phantom on your Comma device:
 
 ---
 
-## Usage Highlights
+## 💡 Usage Highlights
 
 Familiarize yourself with the operation of Phantom's key custom features:
 
@@ -199,7 +200,7 @@ Familiarize yourself with the operation of Phantom's key custom features:
 
 ---
 
-## Contributing
+## 👋 Contributing
 
 We enthusiastically welcome contributions to improve Phantom! Whether it's reporting bugs with detailed information, suggesting well-considered new features, enhancing documentation, or submitting code improvements via Pull Requests, your input is valuable to the project's growth.
 
@@ -207,7 +208,7 @@ _Please review our `CONTRIBUTING.md` file (if available) or open an Issue on Git
 
 ---
 
-## Community & Support
+## 💬 Community & Support
 
 Connect with other users and the developers:
 
@@ -219,7 +220,7 @@ Special thanks to the [RetroPilot](https://github.com/RetroPilot) community for 
 
 ---
 
-## License
+## 📜 License
 
 This project operates under the terms of the [MIT License](https://github.com/JackHars/Phantom/blob/master/phantom/LICENSE), inherited from the original `openpilot` software (© comma.ai). All custom code introduced within the Phantom fork is also released under the MIT License unless explicitly stated otherwise.
 

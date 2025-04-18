@@ -1,3 +1,0 @@
-[submodule "tests/geometry-test-data"]
-	path = tests/geometry-test-data
-	url = https://github.com/mapnik/geometry-test-data.git

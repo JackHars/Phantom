@@ -1,2 +1,0 @@
-# Suppress warning caused by the test HTTP server
-race:httplib

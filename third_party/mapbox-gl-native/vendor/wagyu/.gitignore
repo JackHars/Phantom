@@ -1,8 +1,0 @@
-test
-fixture-tester
-fuzzer
-build
-*.swp
-mason_packages
-*.dSYM
-tests/output-polyjson

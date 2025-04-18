@@ -22,7 +22,7 @@
 *Continued development for Comma 2 hardware with unique, community-driven driving enhancements.*
 
 <p align="center">
-  <img src="maindemo.png" alt="Phantom Main Interface" width="85%">
+  <img src="phantom/assets/maindemo.png" alt="Phantom Main Interface" width="85%">
 </p>
 
 </div>
@@ -94,7 +94,7 @@ Inspired by early community contributions from [Arne Schwarck](https://github.co
 ### Vision-Based Red Light and Stop Sign Detection
 
 <p align="center">
-  <img src="stop.png" alt="Stop Sign Detection - 82% Probability" width="80%">
+  <img src="phantom/assets/stop.png" alt="Stop Sign Detection - 82% Probability" width="80%">
   <br>
   <em>Vision system detecting a stop sign with 82% confidence</em>
 </p>
@@ -108,8 +108,8 @@ Inspired by early community contributions from [Arne Schwarck](https://github.co
 
 <div align="center">
   <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-    <img src="navfullscreen.png" alt="Navigation Full Screen View" width="49%" style="margin-bottom: 5px;">
-    <img src="navsearch.png" alt="Navigation Search Interface" width="49%" style="margin-bottom: 5px;">
+    <img src="phantom/assets/navfullscreen.png" alt="Navigation Full Screen View" width="49%" style="margin-bottom: 5px;">
+    <img src="phantom/assets/navsearch.png" alt="Navigation Search Interface" width="49%" style="margin-bottom: 5px;">
   </div>
   <em>Left: Turn-by-turn directions with lane guidance | Right: Destination search interface</em>
 </div>
@@ -147,12 +147,12 @@ Follow these steps meticulously to install Phantom on your Comma device:
 
 2.  **Clone Repository:** Access your device's terminal (typically via SSH) and execute the following commands to clone the Phantom repository into the `/data` directory. This will replace any existing `openpilot` installation:
     ```bash
-    cd /data && rm -rf openpilot && git clone https://github.com/JackHars/Phantom.git openpilot && cd openpilot
+    cd /data && rm -rf openpilot && git clone https://github.com/JackHars/Phantom.git && cp -r Phantom/phantom/* /data/openpilot/ && rm -rf Phantom
     ```
 
-3.  **Run Installer:** Execute the standard installer script located within the `scripts` directory. This crucial step handles dependency management and compiles the necessary software components:
+3.  **Run Installer:** Execute the standard installer script located within the newly installed directory. This crucial step handles dependency management and compiles the necessary software components:
     ```bash
-    cd scripts && ./installer.sh
+    cd /data/openpilot/scripts && ./installer.sh
     # Follow any on-screen prompts carefully. The device may reboot.
     ```
 
@@ -221,7 +221,7 @@ Special thanks to the [RetroPilot](https://github.com/RetroPilot) community for 
 
 ## License
 
-This project operates under the terms of the [MIT License](https://github.com/JackHars/Phantom/blob/master/LICENSE), inherited from the original `openpilot` software (© comma.ai). All custom code introduced within the Phantom fork is also released under the MIT License unless explicitly stated otherwise.
+This project operates under the terms of the [MIT License](https://github.com/JackHars/Phantom/blob/master/phantom/LICENSE), inherited from the original `openpilot` software (© comma.ai). All custom code introduced within the Phantom fork is also released under the MIT License unless explicitly stated otherwise.
 
 <div align="center">
 <sub>Phantom © 2025 - Developed by enthusiasts, for enthusiasts. **Drive Safely!**</sub>

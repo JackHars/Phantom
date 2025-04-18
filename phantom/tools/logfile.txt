@@ -1,0 +1,19 @@
+Installing initially failed dependencies…
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/cli/command.py", line 232, in install
+[InstallError]:       retcode = do_install(
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/core.py", line 2052, in do_install
+[InstallError]:       do_init(
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/core.py", line 1305, in do_init
+[InstallError]:       do_install_dependencies(
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/core.py", line 899, in do_install_dependencies
+[InstallError]:       batch_install(
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/core.py", line 796, in batch_install
+[InstallError]:       _cleanup_procs(procs, failed_deps_queue, retry=retry)
+[InstallError]:   File "/root/.pyenv/versions/3.8.5/lib/python3.8/site-packages/pipenv/core.py", line 703, in _cleanup_procs
+[InstallError]:       raise exceptions.InstallError(c.dep.name, extra=err_lines)
+[pipenv.exceptions.InstallError]: ERROR: Could not find a version that satisfies the requirement pygame==2.0.0.dev8 (from -r /tmp/pipenv-8rm_gpfw-requirements/pipenv-8hq4avuo-requirement.txt (line 1)) (from versions: 1.9.2rc1, 1.9.2, 1.9.3, 1.9.4.dev0, 1.9.4rc1, 1.9.4, 1.9.5rc1, 1.9.5rc2, 1.9.5, 1.9.6rc1, 1.9.6rc2, 1.9.6, 2.0.0.dev12, 2.0.0.dev14, 2.0.0.dev16, 2.0.0.dev18, 2.0.0.dev20, 2.0.0.dev22, 2.0.0.dev24, 2.0.0, 2.0.1.dev1, 2.0.1, 2.0.2.dev4, 2.0.2, 2.0.3.dev4, 2.0.3.dev6, 2.0.3, 2.1.0.dev2, 2.1.0, 2.1.1.dev2, 2.1.1.dev4, 2.1.1, 2.1.2, 2.1.3.dev6, 2.1.3.dev8, 2.1.3, 2.2.0.dev2, 2.2.0, 2.3.0.dev2, 2.3.0, 2.4.0.dev2, 2.4.0, 2.5.0.dev2, 2.5.0, 2.5.1, 2.5.2, 2.6.0.dev2, 2.6.0, 2.6.1)
+[pipenv.exceptions.InstallError]: ERROR: No matching distribution found for pygame==2.0.0.dev8 (from -r /tmp/pipenv-8rm_gpfw-requirements/pipenv-8hq4avuo-requirement.txt (line 1))
+ERROR: Couldn't install package: pygame
+ Package installation failed...
+  ☤  ▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉ 0/1 — 00:00:01
+

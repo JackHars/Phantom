@@ -55,6 +55,8 @@
 
 Phantom is an open-source driver assistance system derived from the `openpilot` codebase, specifically forked from version 0.8.9. It focuses on maintaining robust support for the Comma 2 hardware while integrating custom driving features developed independently from the main `openpilot` project. This fork aims to provide a tailored and enhanced experience for users seeking specific functionalities or continued use of legacy hardware.
 
+Part of the broader [RetroPilot](https://github.com/RetroPilot) community effort, Phantom contributes to preserving and extending functionality for users of older Comma hardware.
+
 ---
 
 ## Target Audience
@@ -83,7 +85,7 @@ Phantom integrates the core `openpilot` functionality (based on v0.8.9) with sev
 
 ### `ARNE` (Always Ready Neural Engagement)
 
-Inspired by early community contributions from Arne Schwarek, `ARNE` enhances usability in stop-and-go conditions by decoupling lateral (steering) and longitudinal (gas/brake) control engagement:
+Inspired by early community contributions from [Arne Schwarck](https://github.com/arne182), `ARNE` enhances usability in stop-and-go conditions by decoupling lateral (steering) and longitudinal (gas/brake) control engagement:
 
 - **Persistent Lateral Control:** Steering assistance remains active and ready even when longitudinal control is manually overridden by braking to a stop. The UI clearly indicates this persistent "ready" state.
 - **Smoother Transitions:** Minimizes the need for frequent system re-engagement after stops, leading to a less interactive and potentially smoother driving experience in city traffic.
@@ -210,9 +212,10 @@ _Please review our `CONTRIBUTING.md` file (if available) or open an Issue on Git
 Connect with other users and the developers:
 
 - **[GitHub Issues](https://github.com/JackHars/Phantom/issues)**: The primary channel for reporting bugs, tracking issues, and requesting specific features.
-- **[GitHub Discussions](https://github.com/JackHars/Phantom/discussions)**: For general questions, sharing experiences, and broader community interaction.
-- **Discord**: Join our community chat for real-time discussions and informal support _(Invite link: TBD - Check Discussions/Issues/Wiki)_
-- **[Wiki](https://github.com/JackHars/Phantom/wiki)**: Find additional documentation, user guides, FAQs, and troubleshooting tips (content evolves over time).
+
+- **[RetroPilot Discord](https://discord.gg/retropilot-660951518014341124)**: Join the RetroPilot community Discord server for real-time discussions, support, and connecting with other enthusiasts working on legacy Comma hardware.
+
+Special thanks to the [RetroPilot](https://github.com/RetroPilot) community for their ongoing efforts to maintain support for older Comma hardware and foster collaboration among fork developers.
 
 ---
 
@@ -221,5 +224,5 @@ Connect with other users and the developers:
 This project operates under the terms of the [MIT License](https://github.com/JackHars/Phantom/blob/master/LICENSE), inherited from the original `openpilot` software (© comma.ai). All custom code introduced within the Phantom fork is also released under the MIT License unless explicitly stated otherwise.
 
 <div align="center">
-<sub>Phantom © 2023 - Developed by enthusiasts, for enthusiasts. **Drive Safely!**</sub>
+<sub>Phantom © 2025 - Developed by enthusiasts, for enthusiasts. **Drive Safely!**</sub>
 </div>

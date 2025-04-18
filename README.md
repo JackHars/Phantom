@@ -22,7 +22,7 @@
 *Continued development for Comma 2 hardware with unique, community-driven driving enhancements.*
 
 <p align="center">
-  <img src="@maindemo.png" alt="Phantom Main Interface" width="85%">
+  <img src="maindemo.png" alt="Phantom Main Interface" width="85%">
 </p>
 
 </div>
@@ -92,7 +92,7 @@ Inspired by early community contributions from Arne Schwarek, `ARNE` enhances us
 ### Vision-Based Red Light and Stop Sign Detection
 
 <p align="center">
-  <img src="@stop.png" alt="Stop Sign Detection - 82% Probability" width="80%">
+  <img src="stop.png" alt="Stop Sign Detection - 82% Probability" width="80%">
   <br>
   <em>Vision system detecting a stop sign with 82% confidence</em>
 </p>
@@ -106,8 +106,8 @@ Inspired by early community contributions from Arne Schwarek, `ARNE` enhances us
 
 <div align="center">
   <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-    <img src="@navfullscreen.png" alt="Navigation Full Screen View" width="49%" style="margin-bottom: 5px;">
-    <img src="@navsearch.png" alt="Navigation Search Interface" width="49%" style="margin-bottom: 5px;">
+    <img src="navfullscreen.png" alt="Navigation Full Screen View" width="49%" style="margin-bottom: 5px;">
+    <img src="navsearch.png" alt="Navigation Search Interface" width="49%" style="margin-bottom: 5px;">
   </div>
   <em>Left: Turn-by-turn directions with lane guidance | Right: Destination search interface</em>
 </div>

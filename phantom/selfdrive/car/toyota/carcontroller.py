@@ -77,7 +77,7 @@ class CarController():
 
     # Cut steering while we're in a known fault state (2s)    
     # TODO: Fix shitty 3 sec lockout bandage
-    if enabled and not CS.steer_not_allowed and CS.lkasEnabled and ((CS.automaticLaneChange and not CS.belowLaneChangeSpeed) or ((not ((cur_time - self.signal_last) < 1) or not CS.belowLaneChangeSpeed) and not (CS.leftBlinkerOn or CS.rightBlinkerOn) or not abs(CS.out.steeringRateDeg) > 100 or not abs(CS.out.steeringAngleDeg) > 400)):
+    if enabled and not CS.steer_not_allowed and CS.lkasEnabled and ((CS.automaticLaneChange and not CS.belowLaneChangeSpeed) or ((not ((cur_time - self.signal_last) < 1) or not CS.belowLaneChangeSpeed) and not (CS.leftBlinkerOn or CS.rightBlinkerOn) or not abs(CS.out.steeringRateDeg) > 200 or not abs(CS.out.steeringAngleDeg) > 400)):
       self.steer_rate_limited = new_steer != apply_steer
       apply_steer_req = 1
     else:

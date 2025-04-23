@@ -1,1 +1,0 @@
-# Android services package 
